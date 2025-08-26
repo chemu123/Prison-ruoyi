@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.prison.prisoner.mapper.InmatesMapper">
+    
+    <resultMap type="Inmates" id="InmatesResult">
+        <result property="inmateId"    column="inmate_id"    />
+        <result property="inmateImg"    column="inmate_img"    />
+        <result property="firstName"    column="first_name"    />
+        <result property="dateOfBirth"    column="date_of_birth"    />
+        <result property="gender"    column="gender"    />
+        <result property="admissionDate"    column="admission_date"    />
+        <result property="releaseDate"    column="release_date"    />
+        <result property="crime"    column="crime"    />
+        <result property="status"    column="status"    />
+    </resultMap>
+
+    <resultMap id="InmatesCellsResult" type="Inmates" extends="InmatesResult">
+        <collection property="cellsList" notNullColumn="sub_cell_id" javaType="java.util.List" resultMap="CellsResult" />
+    </resultMap>
+
+    <resultMap type="Cells" id="CellsResult">
+        <result property="cellId"    column="sub_cell_id"    />
+        <result property="blockNumber"    column="sub_block_number"    />
+        <result property="cellNumber"    column="sub_cell_number"    />
+    </resultMap>
+
+    <sql id="selectInmatesVo">
+        select inmate_id, inmate_img, first_name, date_of_birth, gender, admission_date, release_date, crime, status from inmates
+    </sql>
+
+    <select id="selectInmatesList" parameterType="Inmates" resultMap="InmatesResult">
+        <include refid="selectInmatesVo"/>
+        <where>  
+            <if test="inmateId != null "> and inmate_id = #{inmateId}</if>
+            <if test="firstName != null  and firstName != ''"> and first_name like concat('%', #{firstName}, '%')</if>
+            <if test="dateOfBirth != null "> and date_of_birth = #{dateOfBirth}</if>
+            <if test="gender != null  and gender != ''"> and gender = #{gender}</if>
+            <if test="admissionDate != null "> and admission_date = #{admissionDate}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectInmatesByInmateId" parameterType="Long" resultMap="InmatesCellsResult">
+        select a.inmate_id, a.inmate_img, a.first_name, a.date_of_birth, a.gender, a.admission_date, a.release_date, a.crime, a.status,
+ b.cell_id as sub_cell_id, b.block_number as sub_block_number, b.cell_number as sub_cell_number
+        from inmates a
+        left join cells b on b.cell_id = a.inmate_id
+        where a.inmate_id = #{inmateId}
+    </select>
+        
+    <insert id="insertInmates" parameterType="Inmates" useGeneratedKeys="true" keyProperty="inmateId">
+        insert into inmates
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="inmateImg != null">inmate_img,</if>
+            <if test="firstName != null and firstName != ''">first_name,</if>
+            <if test="dateOfBirth != null">date_of_birth,</if>
+            <if test="gender != null and gender != ''">gender,</if>
+            <if test="admissionDate != null">admission_date,</if>
+            <if test="releaseDate != null">release_date,</if>
+            <if test="crime != null">crime,</if>
+            <if test="status != null">status,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="inmateImg != null">#{inmateImg},</if>
+            <if test="firstName != null and firstName != ''">#{firstName},</if>
+            <if test="dateOfBirth != null">#{dateOfBirth},</if>
+            <if test="gender != null and gender != ''">#{gender},</if>
+            <if test="admissionDate != null">#{admissionDate},</if>
+            <if test="releaseDate != null">#{releaseDate},</if>
+            <if test="crime != null">#{crime},</if>
+            <if test="status != null">#{status},</if>
+         </trim>
+    </insert>
+
+    <update id="updateInmates" parameterType="Inmates">
+        update inmates
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="inmateImg != null">inmate_img = #{inmateImg},</if>
+            <if test="firstName != null and firstName != ''">first_name = #{firstName},</if>
+            <if test="dateOfBirth != null">date_of_birth = #{dateOfBirth},</if>
+            <if test="gender != null and gender != ''">gender = #{gender},</if>
+            <if test="admissionDate != null">admission_date = #{admissionDate},</if>
+            <if test="releaseDate != null">release_date = #{releaseDate},</if>
+            <if test="crime != null">crime = #{crime},</if>
+            <if test="status != null">status = #{status},</if>
+        </trim>
+        where inmate_id = #{inmateId}
+    </update>
+
+    <delete id="deleteInmatesByInmateId" parameterType="Long">
+        delete from inmates where inmate_id = #{inmateId}
+    </delete>
+
+    <delete id="deleteInmatesByInmateIds" parameterType="String">
+        delete from inmates where inmate_id in 
+        <foreach item="inmateId" collection="array" open="(" separator="," close=")">
+            #{inmateId}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteCellsByCellIds" parameterType="String">
+        delete from cells where cell_id in 
+        <foreach item="cellId" collection="array" open="(" separator="," close=")">
+            #{cellId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteCellsByCellId" parameterType="Long">
+        delete from cells where cell_id = #{cellId}
+    </delete>
+
+    <insert id="batchCells">
+        insert into cells( cell_id, block_number, cell_number) values
+		<foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.cellId}, #{item.blockNumber}, #{item.cellNumber})
+        </foreach>
+    </insert>
+</mapper>

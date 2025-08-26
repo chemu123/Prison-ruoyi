@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.prison.prisoner.mapper.PrisonerPhotosMapper">
+    
+    <resultMap type="PrisonerPhotos" id="PrisonerPhotosResult">
+        <result property="firstName"    column="first_name"    />
+        <result property="inmateImg"    column="inmate_img"    />
+    </resultMap>
+
+    <sql id="selectPrisonerPhotosVo">
+        select first_name, inmate_img from prisoner_photos
+    </sql>
+
+    <select id="selectPrisonerPhotosList" parameterType="PrisonerPhotos" resultMap="PrisonerPhotosResult">
+        <include refid="selectPrisonerPhotosVo"/>
+        <where>  
+            <if test="firstName != null  and firstName != ''"> and first_name like concat('%', #{firstName}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectPrisonerPhotosByFirstName" parameterType="String" resultMap="PrisonerPhotosResult">
+        <include refid="selectPrisonerPhotosVo"/>
+        where first_name = #{firstName}
+    </select>
+        
+    <insert id="insertPrisonerPhotos" parameterType="PrisonerPhotos">
+        insert into prisoner_photos
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="firstName != null and firstName != ''">first_name,</if>
+            <if test="inmateImg != null">inmate_img,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="firstName != null and firstName != ''">#{firstName},</if>
+            <if test="inmateImg != null">#{inmateImg},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePrisonerPhotos" parameterType="PrisonerPhotos">
+        update prisoner_photos
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="inmateImg != null">inmate_img = #{inmateImg},</if>
+        </trim>
+        where first_name = #{firstName}
+    </update>
+
+    <delete id="deletePrisonerPhotosByFirstName" parameterType="String">
+        delete from prisoner_photos where first_name = #{firstName}
+    </delete>
+
+    <delete id="deletePrisonerPhotosByFirstNames" parameterType="String">
+        delete from prisoner_photos where first_name in 
+        <foreach item="firstName" collection="array" open="(" separator="," close=")">
+            #{firstName}
+        </foreach>
+    </delete>
+</mapper>

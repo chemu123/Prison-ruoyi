@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.prison.prisoner.mapper.CellsMapper">
+    
+    <resultMap type="Cells" id="CellsResult">
+        <result property="cellId"    column="cell_id"    />
+        <result property="blockNumber"    column="block_number"    />
+        <result property="cellNumber"    column="cell_number"    />
+    </resultMap>
+
+    <sql id="selectCellsVo">
+        select cell_id, block_number, cell_number from cells
+    </sql>
+
+    <select id="selectCellsList" parameterType="Cells" resultMap="CellsResult">
+        <include refid="selectCellsVo"/>
+        <where>  
+            <if test="cellId != null "> and cell_id = #{cellId}</if>
+            <if test="blockNumber != null "> and block_number = #{blockNumber}</if>
+            <if test="cellNumber != null "> and cell_number = #{cellNumber}</if>
+        </where>
+    </select>
+    
+    <select id="selectCellsByCellId" parameterType="Long" resultMap="CellsResult">
+        <include refid="selectCellsVo"/>
+        where cell_id = #{cellId}
+    </select>
+        
+    <insert id="insertCells" parameterType="Cells">
+        insert into cells
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="cellId != null">cell_id,</if>
+            <if test="blockNumber != null">block_number,</if>
+            <if test="cellNumber != null">cell_number,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="cellId != null">#{cellId},</if>
+            <if test="blockNumber != null">#{blockNumber},</if>
+            <if test="cellNumber != null">#{cellNumber},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCells" parameterType="Cells">
+        update cells
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="blockNumber != null">block_number = #{blockNumber},</if>
+            <if test="cellNumber != null">cell_number = #{cellNumber},</if>
+        </trim>
+        where cell_id = #{cellId}
+    </update>
+
+    <delete id="deleteCellsByCellId" parameterType="Long">
+        delete from cells where cell_id = #{cellId}
+    </delete>
+
+    <delete id="deleteCellsByCellIds" parameterType="String">
+        delete from cells where cell_id in 
+        <foreach item="cellId" collection="array" open="(" separator="," close=")">
+            #{cellId}
+        </foreach>
+    </delete>
+</mapper>
